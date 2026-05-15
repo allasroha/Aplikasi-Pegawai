@@ -25,20 +25,24 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           PROMPT=$(cat pr.diff)
-
+      
+          jq -n \
+            --arg prompt "$PROMPT" \
+            '{
+              contents: [{
+                parts: [{
+                  text: ("Review this pull request diff as a senior backend engineer.\n\n" + $prompt)
+                }]
+              }]
+            }' > request.json
+      
           curl -s \
             -X POST \
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"contents\": [{
-                \"parts\": [{
-                  \"text\": \"Review this PR diff as a senior backend engineer:\n\n$PROMPT\"
-                }]
-              }]
-            }" \
+            -d @request.json \
             > response.json
-
+      
           cat response.json
 
       - name: Comment PR
