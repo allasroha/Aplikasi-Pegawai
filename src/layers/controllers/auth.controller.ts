@@ -1,4 +1,5 @@
 import { authService } from '../services/auth.service';
+import { blacklistService } from '../services/blacklist.service';
 import type { LoginInput, RegisterEmployeeInput } from '../models/auth.model';
 
 export const authController = {
@@ -28,4 +29,15 @@ export const authController = {
       data: result,
     };
   },
+
+  async logout({ headers }: { headers: Record<string, string | undefined> }) {
+    const authHeader = headers['authorization']!;
+    const token = authHeader.substring(7);
+    blacklistService.blacklistToken(token);
+    return {
+      status: 'success',
+      message: 'Logged out successfully',
+    };
+  },
 };
+

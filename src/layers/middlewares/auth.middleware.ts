@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { jwt } from '@elysiajs/jwt';
 import { env } from '../../config/env';
 import { UnauthorizedError, ForbiddenError } from './error.middleware';
+import { blacklistService } from '../services/blacklist.service';
 
 export const authMiddleware = (app: Elysia) =>
   app
@@ -18,6 +19,9 @@ export const authMiddleware = (app: Elysia) =>
           throw new UnauthorizedError('Missing or invalid Authorization header');
         }
         const token = authHeader.substring(7);
+        if (blacklistService.isTokenBlacklisted(token)) {
+          throw new UnauthorizedError('Token has been invalidated (logged out)');
+        }
         const payload = await jwt.verify(token);
         if (!payload) {
           throw new UnauthorizedError('Invalid or expired token');
