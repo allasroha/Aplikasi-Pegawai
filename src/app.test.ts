@@ -30,7 +30,7 @@ describe("API End-to-End Tests", () => {
         }),
       })
     );
-    const body = await loginResponse.json();
+    const body = (await loginResponse.json()) as any;
     adminToken = body.data.token;
   });
 
@@ -54,7 +54,7 @@ describe("API End-to-End Tests", () => {
       );
 
       expect(response.status).toBe(200);
-      const resBody = await response.json();
+      const resBody = (await response.json()) as any;
       expect(resBody.status).toBe("success");
       expect(resBody.data.token).toBeDefined();
       expect(resBody.data.user.role).toBe("admin");
@@ -73,7 +73,7 @@ describe("API End-to-End Tests", () => {
       );
 
       expect(response.status).toBe(400);
-      const resBody = await response.json();
+      const resBody = (await response.json()) as any;
       expect(resBody.status).toBe("error");
       expect(resBody.message).toBe("Validation error");
     });
@@ -95,7 +95,7 @@ describe("API End-to-End Tests", () => {
       );
 
       expect(response.status).toBe(401);
-      const resBody = await response.json();
+      const resBody = (await response.json()) as any;
       expect(resBody.status).toBe("error");
       expect(resBody.message).toContain("Authorization");
     });
@@ -118,7 +118,7 @@ describe("API End-to-End Tests", () => {
       );
 
       expect(response.status).toBe(200);
-      const resBody = await response.json();
+      const resBody = (await response.json()) as any;
       expect(resBody.status).toBe("success");
       expect(resBody.data.email).toBe(testEmployeeEmail);
       expect(resBody.data.employee.nik).toBe(testEmployeeNik);
@@ -136,7 +136,7 @@ describe("API End-to-End Tests", () => {
           }),
         })
       );
-      const empLoginBody = await empLoginResponse.json();
+      const empLoginBody = (await empLoginResponse.json()) as any;
       employeeToken = empLoginBody.data.token;
     });
 
@@ -158,7 +158,7 @@ describe("API End-to-End Tests", () => {
       );
 
       expect(response.status).toBe(403);
-      const resBody = await response.json();
+      const resBody = (await response.json()) as any;
       expect(resBody.status).toBe("error");
       expect(resBody.message).toContain("Admin role required");
     });
@@ -174,7 +174,7 @@ describe("API End-to-End Tests", () => {
       );
 
       expect(response.status).toBe(200);
-      const resBody = await response.json();
+      const resBody = (await response.json()) as any;
       expect(resBody.status).toBe("success");
       expect(resBody.data).toBeInstanceOf(Array);
       expect(resBody.data.length).toBeGreaterThan(0);
