@@ -8,6 +8,13 @@
       "when": 1778660860695,
       "tag": "0000_tan_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779175510337,
+      "tag": "0001_sticky_punisher",
+      "breakpoints": true
     }
   ]
 }
