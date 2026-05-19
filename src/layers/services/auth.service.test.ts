@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeAll, afterAll } from "bun:test";
 import { authService } from "./auth.service";
+import { employeeService } from "./employee.service";
 import { db } from "../../database/connection";
 import { users } from "../../database/schema";
 import { eq } from "drizzle-orm";
@@ -96,6 +97,32 @@ describe("Auth and Employee Service Tests", () => {
           password: testPassword,
         })
       ).rejects.toThrow("NIK already registered");
+    });
+  });
+
+  describe("employeeService", () => {
+    it("should fetch all employees with pagination", async () => {
+      const result = await employeeService.getAllEmployees(1, 10);
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+      expect(result.pagination).toBeDefined();
+      expect(result.pagination.page).toBe(1);
+      expect(result.pagination.limit).toBe(10);
+      expect(result.pagination.total).toBeTypeOf("number");
+    });
+
+    it("should throw error if updating non-existent employee", async () => {
+      expect(
+        employeeService.updateEmployee(999999, {
+          name: "Non Existent",
+          email: "nonexistent_update@example.com",
+          nik: "999999999999999",
+        })
+      ).rejects.toThrow("Employee not found");
+    });
+
+    it("should throw error if deleting non-existent employee", async () => {
+      expect(employeeService.deleteEmployee(999999)).rejects.toThrow("Employee not found");
     });
   });
 });

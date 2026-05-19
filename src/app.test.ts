@@ -11,6 +11,7 @@ describe("API End-to-End Tests", () => {
   const testEmployeeEmail = "e2e_employee@example.com";
   const testEmployeeNik = "987654321012345";
   let createdEmployeeId: number | null = null;
+  let empId: number | null = null;
 
   beforeAll(async () => {
     // 1. Clean up test employee if exists
@@ -124,6 +125,7 @@ describe("API End-to-End Tests", () => {
       expect(resBody.data.employee.nik).toBe(testEmployeeNik);
 
       createdEmployeeId = resBody.data.id;
+      empId = resBody.data.employee.id;
 
       // Login as this new employee to get an employee role token
       const empLoginResponse = await app.handle(
@@ -176,10 +178,13 @@ describe("API End-to-End Tests", () => {
       expect(response.status).toBe(200);
       const resBody = (await response.json()) as any;
       expect(resBody.status).toBe("success");
-      expect(resBody.data).toBeInstanceOf(Array);
-      expect(resBody.data.length).toBeGreaterThan(0);
+      expect(resBody.data.items).toBeInstanceOf(Array);
+      expect(resBody.data.items.length).toBeGreaterThan(0);
+      expect(resBody.data.pagination).toBeDefined();
+      expect(resBody.data.pagination.page).toBe(1);
+      expect(resBody.data.pagination.limit).toBe(10);
       
-      const found = resBody.data.find((e: any) => e.nik === testEmployeeNik);
+      const found = resBody.data.items.find((e: any) => e.nik === testEmployeeNik);
       expect(found).toBeDefined();
       expect(found.name).toBe("E2E Employee");
       expect(found.statusPengisian).toBe("Belum Lengkap");
@@ -194,6 +199,125 @@ describe("API End-to-End Tests", () => {
       );
 
       expect(response.status).toBe(403);
+    });
+  });
+
+  describe("PUT /api/admin/employees/:id", () => {
+    it("should allow admin to update employee details", async () => {
+      const response = await app.handle(
+        new Request(`http://localhost/api/admin/employees/${empId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            nama: "Updated Employee Name",
+            email: "updated_employee@example.com",
+            nik: "987654321012349",
+          }),
+        })
+      );
+
+      expect(response.status).toBe(200);
+      const resBody = (await response.json()) as any;
+      expect(resBody.status).toBe("success");
+      expect(resBody.data.name).toBe("Updated Employee Name");
+      expect(resBody.data.email).toBe("updated_employee@example.com");
+      expect(resBody.data.nik).toBe("987654321012349");
+    });
+
+    it("should deny employee from updating employee details", async () => {
+      const response = await app.handle(
+        new Request(`http://localhost/api/admin/employees/${empId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${employeeToken}`,
+          },
+          body: JSON.stringify({
+            nama: "Attempted Name Update",
+            email: "updated_employee@example.com",
+            nik: "987654321012349",
+          }),
+        })
+      );
+
+      expect(response.status).toBe(403);
+    });
+  });
+
+  describe("POST /api/auth/logout", () => {
+    it("should blacklist token and deny subsequent authenticated requests", async () => {
+      const logoutResponse = await app.handle(
+        new Request("http://localhost/api/auth/logout", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${employeeToken}` },
+        })
+      );
+
+      expect(logoutResponse.status).toBe(200);
+      const logoutBody = (await logoutResponse.json()) as any;
+      expect(logoutBody.status).toBe("success");
+
+      const checkResponse = await app.handle(
+        new Request("http://localhost/api/admin/employees", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${employeeToken}` },
+        })
+      );
+
+      expect(checkResponse.status).toBe(401);
+      const checkBody = (await checkResponse.json()) as any;
+      expect(checkBody.message).toContain("invalidated");
+    });
+  });
+
+  describe("DELETE /api/admin/employees/:id", () => {
+    it("should deny employee from deleting employee", async () => {
+      const empLoginResponse = await app.handle(
+        new Request("http://localhost/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: "updated_employee@example.com",
+            password: "tempPass123",
+          }),
+        })
+      );
+      const empLoginBody = (await empLoginResponse.json()) as any;
+      const freshEmployeeToken = empLoginBody.data.token;
+
+      const response = await app.handle(
+        new Request(`http://localhost/api/admin/employees/${empId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${freshEmployeeToken}` },
+        })
+      );
+      expect(response.status).toBe(403);
+    });
+
+    it("should allow admin to delete employee", async () => {
+      const response = await app.handle(
+        new Request(`http://localhost/api/admin/employees/${empId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${adminToken}` },
+        })
+      );
+
+      expect(response.status).toBe(200);
+      const resBody = (await response.json()) as any;
+      expect(resBody.status).toBe("success");
+
+      const checkResponse = await app.handle(
+        new Request(`http://localhost/api/admin/employees`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${adminToken}` },
+        })
+      );
+      const checkBody = (await checkResponse.json()) as any;
+      const found = checkBody.data.items.find((e: any) => e.id === empId);
+      expect(found).toBeUndefined();
     });
   });
 });

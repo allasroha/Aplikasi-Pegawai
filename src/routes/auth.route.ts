@@ -13,4 +13,9 @@ export const authRoute = new Elysia({ prefix: '/auth' })
     beforeHandle: async ({ isAdmin }) => {
       await isAdmin();
     },
+  })
+  .post('/logout', authController.logout, {
+    beforeHandle: async ({ isAuthenticated }) => {
+      await isAuthenticated();
+    },
   });
