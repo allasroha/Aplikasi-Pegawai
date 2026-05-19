@@ -8,6 +8,27 @@ export class NotFoundError extends Error {
   }
 }
 
+export class UnauthorizedError extends Error {
+  constructor(message: string = 'Unauthorized') {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
+
+export class ForbiddenError extends Error {
+  constructor(message: string = 'Forbidden') {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
+}
+
+export class ConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConflictError';
+  }
+}
+
 export const errorMiddleware = (app: Elysia) =>
   app.onError(({ code, error, set }) => {
     console.error(`[${code}] Error:`, error);
@@ -38,6 +59,30 @@ export const errorMiddleware = (app: Elysia) =>
 
     if (error instanceof NotFoundError) {
       set.status = 404;
+      return {
+        status: 'error',
+        message: error.message,
+      };
+    }
+
+    if (error instanceof UnauthorizedError) {
+      set.status = 401;
+      return {
+        status: 'error',
+        message: error.message,
+      };
+    }
+
+    if (error instanceof ForbiddenError) {
+      set.status = 403;
+      return {
+        status: 'error',
+        message: error.message,
+      };
+    }
+
+    if (error instanceof ConflictError) {
+      set.status = 409;
       return {
         status: 'error',
         message: error.message,

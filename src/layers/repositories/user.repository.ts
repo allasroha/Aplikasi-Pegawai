@@ -13,6 +13,11 @@ export const userRepository = {
     return result[0];
   },
 
+  async findByEmail(email: string) {
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result[0];
+  },
+
   async create(data: CreateUserInput) {
     const result = await db.insert(users).values(data).returning();
     return result[0];
