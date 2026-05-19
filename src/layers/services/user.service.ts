@@ -1,5 +1,6 @@
 import { userRepository } from '../repositories/user.repository';
 import type { CreateUserInput, UpdateUserInput } from '../models/user.model';
+import { NotFoundError } from '../middlewares/error.middleware';
 
 export const userService = {
   async getAllUsers() {
@@ -8,7 +9,7 @@ export const userService = {
 
   async getUserById(id: number) {
     const user = await userRepository.findById(id);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new NotFoundError('User not found');
     return user;
   },
 
@@ -18,13 +19,13 @@ export const userService = {
 
   async updateUser(id: number, data: UpdateUserInput) {
     const user = await userRepository.findById(id);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new NotFoundError('User not found');
     return await userRepository.update(id, data);
   },
 
   async deleteUser(id: number) {
     const user = await userRepository.findById(id);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new NotFoundError('User not found');
     return await userRepository.delete(id);
   },
 };

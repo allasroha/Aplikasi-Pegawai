@@ -1,11 +1,11 @@
-import { z } from 'zod';
+import { t, type Static } from 'elysia';
 
-export const createUserSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email format'),
+export const createUserSchema = t.Object({
+  name: t.String({ minLength: 1, error: 'Name is required' }),
+  email: t.String({ format: 'email', error: 'Invalid email format' }),
 });
 
-export const updateUserSchema = createUserSchema.partial();
+export const updateUserSchema = t.Partial(createUserSchema);
 
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type CreateUserInput = Static<typeof createUserSchema>;
+export type UpdateUserInput = Static<typeof updateUserSchema>;
